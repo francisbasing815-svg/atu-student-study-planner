@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Study Planner - ATU</title>
+<style>
+body{font-family:Arial,sans-serif;background:#f0f2f5;margin:0;padding:15px}
+.card{max-width:600px;margin:auto;background:white;padding:20px;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,0.1)}
+h1{color:#1a3a5c;text-align:center;font-size:24px}
+p.sub{text-align:center;color:#666}
+input,select{width:100%;padding:12px;margin:8px 0;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;font-size:16px}
+button.add{width:100%;padding:13px;background:#1a3a5c;color:white;border:none;border-radius:8px;font-size:16px;cursor:pointer}
+.filters{text-align:center;margin:15px 0}
+.filters button{padding:8px 18px;margin:3px;border:1px solid #1a3a5c;border-radius:20px;background:white;color:#1a3a5c;cursor:pointer}
+.filters button.active{background:#1a3a5c;color:white}
+.task{display:flex;justify-content:space-between;align-items:center;border:1px solid #eee;padding:12px;border-radius:10px;margin:8px 0}
+.task.done{opacity:0.6}
+.task.done b{text-decoration:line-through}
+.badge{font-size:12px;padding:3px 8px;border-radius:10px;color:white}
+.high{background:#e74c3c}.medium{background:#f39c12}.low{background:#27ae60}
+.btn{padding:7px 12px;border:none;border-radius:6px;color:white;cursor:pointer;margin-left:5px}
+.green{background:#27ae60}.red{background:#e74c3c}
+#error{color:red;text-align:center;display:none}
+#empty{text-align:center;color:#888;margin:20px}
+#count{text-align:center;color:#666;margin-top:15px}
+</style>
+</head>
+<body>
+<div class="card">
+<h1>Student Study Planner</h1>
+<p class="sub">ATU Virtual Internship - Basing Francis Boyuo | 01251311C</p>
+<input id="title" placeholder="Task title e.g. Read Chapter 3">
+<input id="subject" placeholder="Subject e.g. ICT 101">
+<select id="priority"><option value="High">Priority: High</option><option value="Medium" selected>Priority: Medium</option><option value="Low">Priority: Low</option></select>
+<p id="error">Please enter a task title!</p>
+<button class="add" onclick="addTask()">+ Add Task</button>
+<div class="filters">
+<button id="btnAll" class="active" onclick="setFilter('All')">All</button>
+<button id="btnTodo" onclick="setFilter('Todo')">To Do</button>
+<button id="btnDone" onclick="setFilter('Done')">Completed</button>
+</div>
+<div id="list"></div>
+<p id="empty">No tasks yet. Add your first task above!</p>
+<p id="count"></p>
+<p style="text-align:center;color:#888;font-size:13px">Tasks saved with localStorage - stay after refresh</p>
+</div>
+<script>
+let tasks = JSON.parse(localStorage.getItem('atu_tasks')||'[]');
+let filter='All';
+function save(){localStorage.setItem('atu_tasks',JSON.stringify(tasks));}
+function setFilter(f){filter=f;document.getElementById('btnAll').className=f==='All'?'active':'';document.getElementById('btnTodo').className=f==='Todo'?'active':'';document.getElementById('btnDone').className=f==='Done'?'active':'';render();}
+function addTask(){
+let t=document.getElementById('title').value.trim();
+let s=document.getElementById('subject').value.trim()||'General';
+let p=document.getElementById('priority').value;
+if(!t){document.getElementById('error').style.display='block';return;}
+document.getElementById('error').style.display='none';
+tasks.push({title:t,subject:s,priority:p,done:false});save();
+document.getElementById('title').value='';document.getElementById('subject').value='';render();
+}
+function toggleTask(i){tasks[i].done=!tasks[i].done;save();render();}
+function deleteTask(i){tasks.splice(i,1);save();render();}
+function render(){
+let list=document.getElementById('list');list.innerHTML='';
+let shown=tasks.map((task,idx)=>({...task,orig:idx})).filter(task=>filter==='All'||(filter==='Todo'&&!task.done)||(filter==='Done'&&task.done));
+document.getElementById('empty').style.display=shown.length?'none':'block';
+shown.forEach(task=>{
+let cls=task.priority==='High'?'high':task.priority==='Medium'?'medium':'low';
+list.innerHTML+=`<div class="task ${task.done?'done':''}"><div><b>${task.title}</b><br><small>${task.subject} - <span class="badge ${cls}">${task.priority}</span></small></div><div><button class="btn green" onclick="toggleTask(${task.orig})">${task.done?'Undo':'Done'}</button><button class="btn red" onclick="deleteTask(${task.orig})">Delete</button></div></div>`;
+});
+let done=tasks.filter(t=>t.done).length;
+document.getElementById('count').innerText=`Total: ${tasks.length} | Completed: ${done} | Remaining: ${tasks.length-done}`;
+}
+render();
+</script>
+</body>
+</html>
